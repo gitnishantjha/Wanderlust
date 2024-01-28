@@ -1,0 +1,69 @@
+<%layout("/layouts/boilerplate")%>
+
+<div class="row">
+    <!-- giving col-8 means i am going to put my div in 8 col of the screen if the column is totally divided into 12 columns-->
+    <div class="col-8 offset-2 mt-3">
+    <h3>create a new Listing</h3>
+ 
+    <form method="post" action="/listings" novalidate class="needs-validation">
+        <!-- class="mb-3" is a bootstrap class which give margin bottom of 3 -->
+        
+        <div class="mb-3">
+            <label for="title" class="form-label">Title</label>
+            <input name="listing[title]" placeholder="enter title" type="text" class="form-control" required>
+            <div class="invalid-feedback">
+                Enter the valid title
+              </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="Description" class="form-label">Description</label>
+            <textarea name="listing[description]" placeholder="Enter the description" type="text" class="form-control" required></textarea>
+            <div class="invalid-feedback">
+                Enter the short description
+              </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="image" class="form-label">Image</label>
+            <input name="listing[image]" placeholder="enter image URL/link" type="text" class="form-control">
+            <!-- <div class="invalid-feedback">
+                Enter the valid image
+              </div> -->
+
+        </div>
+        <div class="row">
+            <div class="mb-3 col-md-4">
+                <label for="price" class="form-label">Price</label>
+                <input name="listing[price]" placeholder="1200"  class="form-control" required>
+                <div class="invalid-feedback">
+                    Enter the valid price
+                  </div>
+            </div>
+
+            <div class="mb-3 col-md-8">
+                <label for="Country" class="form-label">Country</label>
+                <input name="listing[country]" placeholder="India" type="text" class="form-control" required>
+                <div class="invalid-feedback">
+                    Enter the valid country
+                  </div>
+            </div>
+        </div>
+      
+
+        <div class="mb-3">
+            <label for="location" class="form-label">Location</label>
+            <input name="listing[location]" placeholder="enter location" type="text" class="form-control" required>
+            <div class="invalid-feedback">
+                Enter the valid location
+              </div>
+        </div>
+
+       
+
+        <button class="btn btn-dark  add-btn mt-3">add</button>
+        
+    </form>
+  
+</div>
+</div>
