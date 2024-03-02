@@ -8,8 +8,12 @@ const methodOverride=require("method-override");//used when we want to use DELET
 const ejsMate=require("ejs-mate");
 const wrapAsync=require("./utils/wrapAsync.js");
 const ExpressError=require("./utils/ExpressError.js");
-const {listingSchema,reviewSchema}=require("./schema.js");
+const {listingSchema,reviewSchema}=require("./schema.js");//ye line grey out hui after adding listing and review section to the router directory as these lines are  no longer in use
+const listings=require("./routes/listing.js");
+const reviews=require("./routes/review.js");
 
+const session=require("express-session");
+const flash=require("connect-flash");
 //To set up the ejs 
 //step 1
 const path=require("path");
@@ -35,124 +39,31 @@ await mongoose.connect(Mongo_url); //connecting the mongoose through the main()
 };
 
 
+//using sessions
+const sessionOptions={
+    secret:"mysupersecretcode",
+    resave:false,
+    saveUninitialized:true,
+    cookie:{
+        expires:Date.now()+7*24*60*60*1000,
+        maxAge:7*24*60*60*1000,
+        httpOnly:true,
+    },
+};
+
 app.get('/',(req,res)=>{ //making the api call for root server
     res.send("Hi..root is working");
 });
 
+app.use(session(sessionOptions));
+app.use(flash());
 
-//validation of Schema(middleWare)
-const validateListing=(req,res,next)=>{
-    let {error}=  listingSchema.validate(req.body);//jo listing schema ke andar hmne requiremn=ments likha hai joi ke form me kya  req.body  validate ho paa rhi hai
-    
-    if(error){
-        let errMsg=error.details.map((el)=>el.message).join(",");
-      throw new ExpressError(400,errMsg);
-    }else{
-        next();
-    }
-};
-
-const validateReview=(req,res,next)=>{
-    let {error}=reviewSchema.validate(req.body);
-    if(error){
-        let errMsg=error.details.map((el)=>el.message).join(",");
-        throw new ExpressError(400,errMsg);
-    }else{
-        next();
-    }
-};
-
-//index route
-app.get("/listings",
-wrapAsync(async (req,res)=>{
-    const allListings=await Listing.find({});
-    res.render("listings/index.ejs",{allListings});
-})
-);
-
-//NEW route
-app.get("/listings/new", (req,res)=>{
-    res.render("listings/new.ejs");
-   console.log("Working");
-}
-);
-//show route
-app.get("/listings/:id",wrapAsync(async (req,res)=>{
-    let {id}=req.params;
-  const listing =await Listing.findById(id).populate("reviews");
-  res.render("listings/show.ejs",{listing});
-}));
-
-
-//create route
-app.post("/listings",validateListing,wrapAsync(async(req,res,next)=>{
-     
-    // if(!req.body.listing){
-    //     throw new ExpressError(400,"send valid data for listing");
-    // }
-  // let {title,description,image,price,country,location}=req.body; 
-   //let listings=req.body; //this will return the listing object
-   
-    const newListing=new Listing(req.body.listing);//creating the instance of listing
-    await newListing.save();//save our dat in the database
-    res.redirect("/listings");    
-   })
-);
-
-//Edit route
-//-> in Edit route as we can only use "GET" or "PUT" in our form so we will install npm i method-override package
-//after installing we will pass one query String "?_method=PUT"
-// after this add these two lines in header.1>  app.use(methodOverride("_merthod")); 2>const methodOverride=require("method-override");
-app.get("/listings/:id/edit", wrapAsync(async (req,res)=>{
-    let {id}=req.params;
-    const listing=await Listing.findById(id);
-   res.render("listings/edit.ejs",{listing});
-}));
-
-//update route
-app.put("/listings/:id", validateListing,wrapAsync(async(req,res)=>{
-    // if(!req.body.listing){ // if this post req is called  by hopscoth and postman then the this if statement will handle the error.
-    //     throw new ExpressError(400,"send valid data for listing");
-    // }
-    let {id}=req.params;
-   await Listing.findByIdAndUpdate(id,{...req.body.listing});
-   res.redirect(`/listings/${id}`);
-
-}));
-
-//Delete Route
-app.delete("/listings/:id", wrapAsync(async(req,res)=>{
-  let {id}=req.params;
-  await Listing.deleteOne({_id:id});
-  res.redirect("/listings");
-}));
-
-//post Reviews route
-app.post("/listings/:id/reviews",validateReview,
-wrapAsync(async(req,res)=>{
-let listing=await Listing.findById(req.params.id);
-let newReview=new Review(req.body.review);
-
-listing.reviews.push(newReview);
-await newReview.save();
-await listing.save();
-
-res.redirect(`/listings/${listing._id}`);
-}));
-
-//Delete reviews route
-
-app.delete("/listings/:id/reviews/:reviewId",
-wrapAsync(async(req, res)=>{
-    let { id , reviewId}=req.params;
-    await Listing.findByIdAndUpdate(id , {$pull: {reviews : reviewId}}); //pull kr ke remove kr rhe hain
-    await Review.findByIdAndDelete(reviewId);
-    res.redirect(`/listings/${id}`);
-})
-);
-
-
-
+app.use((req,res,next)=>{
+    res.locals.success=req.flash("success");
+    next();
+});
+app.use("/listings",listings);
+app.use("/listings/:id/reviews",reviews);
 
 
 
