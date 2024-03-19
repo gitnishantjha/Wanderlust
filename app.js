@@ -9,14 +9,22 @@ const ejsMate=require("ejs-mate");
 const wrapAsync=require("./utils/wrapAsync.js");
 const ExpressError=require("./utils/ExpressError.js");
 const {listingSchema,reviewSchema}=require("./schema.js");//ye line grey out hui after adding listing and review section to the router directory as these lines are  no longer in use
-const listings=require("./routes/listing.js");
-const reviews=require("./routes/review.js");
+
+
+const listingRouter=require("./routes/listing.js");
+const reviewRouter=require("./routes/review.js");
+const userRouter=require("./routes/user.js");
 
 const session=require("express-session");
 const flash=require("connect-flash");
+
 //To set up the ejs 
 //step 1
 const path=require("path");
+
+const passport=require("passport");
+const LocalStrategy=require("passport-local");
+const User=require("./models/user.js");
 //*make a "views" folder , in this folder we will make templates.
 //inside it we are making a new folder name Listing in which we will save all the listing related things
 //inside listing make index.ejs
@@ -58,16 +66,41 @@ app.get('/',(req,res)=>{ //making the api call for root server
 app.use(session(sessionOptions));
 app.use(flash());
 
+
+app.use(passport.initialize());//to initialize passport middleware every time we log in
+app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate()));
+// use static serialize and deserialize of model for passport session support
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+
+
 app.use((req,res,next)=>{
    
     res.locals.success=req.flash("success");
-    res.locals.error=req.flash("error");
 
+    res.locals.error=req.flash("error");
+   // console.log(res.locals.error);
+     res.locals.currUser=req.user;
     next();
 });
-app.use("/listings",listings);
-app.use("/listings/:id/reviews",reviews);
 
+
+// app.get("/demouser",async(req,res)=>{
+// let fakeUser=new User({
+//     email:"student@gmail.com",
+//     username: "delta-student"
+// });
+
+// let registeredUser=await User.register(fakeUser,"helloworld");
+// res.send(registeredUser);
+// });
+
+
+app.use("/listings",listingRouter);
+app.use("/listings/:id/reviews",reviewRouter);
+app.use("/",userRouter);
 
 
 
