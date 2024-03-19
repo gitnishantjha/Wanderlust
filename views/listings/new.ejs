@@ -10,15 +10,16 @@
         
         <div class="mb-3">
             <label for="title" class="form-label">Title</label>
-            <input name="listing[title]" placeholder="enter title" type="text" class="form-control" required>
+            <input name="listing[title]" placeholder="enter title" type="text" class="form-control" required maxlength="50">
             <div class="invalid-feedback">
                 Enter the valid title
               </div>
         </div>
+   
 
         <div class="mb-3">
             <label for="Description" class="form-label">Description</label>
-            <textarea name="listing[description]" placeholder="Enter the description" type="text" class="form-control" required></textarea>
+            <textarea name="listing[description]" placeholder="Enter the description" type="text" class="form-control" required maxlength="80"></textarea>
             <div class="invalid-feedback">
                 Enter the short description
               </div>
@@ -35,7 +36,7 @@
         <div class="row">
             <div class="mb-3 col-md-4">
                 <label for="price" class="form-label">Price</label>
-                <input name="listing[price]" placeholder="1200"  class="form-control" required>
+                <input name="listing[price]" placeholder="1200"  class="form-control" required type="number" max="10000">
                 <div class="invalid-feedback">
                     Enter the valid price
                   </div>
@@ -53,7 +54,7 @@
 
         <div class="mb-3">
             <label for="location" class="form-label">Location</label>
-            <input name="listing[location]" placeholder="enter location" type="text" class="form-control" required>
+            <input name="listing[location]" placeholder="enter location" type="text" class="form-control" required maxlength="30">
             <div class="invalid-feedback">
                 Enter the valid location
               </div>

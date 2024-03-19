@@ -1,8 +1,6 @@
 const express=require("express");
 const router=express.Router();//creating the router object
 
-
-
 //Index -users
 router.get("/",(req,res)=>{
     res.send("Get for users");
