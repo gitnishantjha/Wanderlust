@@ -109,3 +109,10 @@ text-decoration: none !important;
     padding-left:0;
     padding-right:0;
 }
+/* map */
+
+#map{
+    margin-left: -0px;
+    height:300px;
+    width:550px;
+}

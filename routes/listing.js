@@ -1,103 +1,61 @@
 const express = require("express");
 const router = express.Router();
 const wrapAsync = require("../utils/wrapAsync.js");
-const ExpressError = require("../utils/ExpressError.js");
-const { listingSchema } = require("../schema.js");
 const Listing = require("../models/listing.js");//requiring the listing.js from models directory
-const { isLoggedIn } = require("../middleware.js");
+const { isLoggedIn, isOwner, validateListing } = require("../middleware.js");
+const listingController = require("../controllers/listings.js");
+//file ke form me jo image aa rhi hai usko parse karke ye multer ek upload folder me save karega
+const multer = require('multer');
+const {storage}=require("../cloudConfig.js");
+const upload = multer({storage});
 
-//validation of Schema(middleWare)
-const validateListing = (req, res, next) => {
-  let { error } = listingSchema.validate(req.body);//jo listing schema ke andar hmne requiremn=ments likha hai joi ke form me kya  req.body  validate ho paa rhi hai
+//the get and post request that will come to "/" will be handled by router.route function here we added the code of our index route and create route.
+router.route("/")
+    .get(wrapAsync(listingController.index))
+     .post(isLoggedIn, upload.single('listing[image]') ,validateListing,wrapAsync(listingController.createListing));
 
-  if (error) {
-    let errMsg = error.details.map((el) => el.message).join(",");
-    throw new ExpressError(400, errMsg);
-  } else {
-    next();
-  }
-};
 
-//index route
-router.get("/",
-  wrapAsync(async (req, res) => {
-    const allListings = await Listing.find({});
-    res.render("listings/index.ejs", { allListings });
-  })
-);
+
 
 //NEW route
-router.get("/new", isLoggedIn, (req, res) => {
-  //console.log(req.user);
-
-  res.render("listings/new.ejs");
-  console.log("Working");
-}
-);
-//show route
-router.get("/:id", wrapAsync(async (req, res) => {
-  let { id } = req.params;
-  const listing = await Listing.findById(id).populate("reviews").populate("owner");
-  if (!listing) {
-    req.flash("error", "Listing does not exit!");
-    res.redirect("/listings");
-  }
-  console.log(listing);
-  res.render("listings/show.ejs", { listing });
-}));
+router.get("/new", isLoggedIn, listingController.renderNewForm);
 
 
-//create route
-router.post("/", isLoggedIn, validateListing, wrapAsync(async (req, res, next) => {
+router.route("/:id")
+    .get(wrapAsync(listingController.showListing))
+    .put(isLoggedIn, isOwner, upload.single("listing[image]"),validateListing, wrapAsync(listingController.updateListing))
+    .delete(isLoggedIn, isOwner, wrapAsync(listingController.destroyListing));
 
-  // if(!req.body.listing){
-  //     throw new ExpressError(400,"send valid data for listing");
-  // }
-  // let {title,description,image,price,country,location}=req.body; 
-  //let listings=req.body; //this will return the listing object
 
-  const newListing = new Listing(req.body.listing);//creating the instance of listing
-  console.log(req.user);
-  newListing.owner = req.user._id;
-  await newListing.save();//save our dat in the database
-  req.flash("success", "New Listing Created!");
-  res.redirect("/listings");
-})
-);
+// //index route
+// router.get("/", wrapAsync(listingController.index));
+
+
+
+
+// //show route
+// router.get("/:id", wrapAsync(listingController.showListing));
+
+
+
+// //create route
+// router.post("/", isLoggedIn, validateListing, wrapAsync(listingController.createListing)
+// );
 
 //Edit route
 //-> in Edit route as we can only use "GET" or "PUT" in our form so we will install npm i method-override package
 //after installing we will pass one query String "?_method=PUT"
 // after this add these two lines in header.1>  app.use(methodOverride("_merthod")); 2>const methodOverride=require("method-override");
-router.get("/:id/edit", isLoggedIn, wrapAsync(async (req, res) => {
-  let { id } = req.params;
-  const listing = await Listing.findById(id);
-  if (!listing) {
-    req.flash("error", "Listing does not exit!");
-    res.redirect("/listings");
-  }
-  res.render("listings/edit.ejs", { listing });
-}));
+router.get("/:id/edit", isLoggedIn, isOwner, wrapAsync(listingController.renderEditForm));
 
-//update route
-router.put("/:id", isLoggedIn, validateListing, wrapAsync(async (req, res) => {
-  // if(!req.body.listing){ // if this post req is called  by hopscoth and postman then the this if statement will handle the error.
-  //     throw new ExpressError(400,"send valid data for listing");
-  // }
-  let { id } = req.params;
-  await Listing.findByIdAndUpdate(id, { ...req.body.listing });
-  req.flash("success", "Listings Updated Successfully!");
 
-  res.redirect(`/listings/${id}`);
+// //update route
+// router.put("/:id", isLoggedIn,isOwner, validateListing, wrapAsync(listingController.updateListing));
 
-}));
+// //Delete Route
+// router.delete("/:id", isLoggedIn, isOwner,wrapAsync(listingController.destroyListing));
+// router.get('/search',wrapAsync(listingController.searchlisting));
 
-//Delete Route
-router.delete("/:id", isLoggedIn, wrapAsync(async (req, res) => {
-  let { id } = req.params;
-  let deletedListing = await Listing.findByIdAndDelete(id);
-  req.flash("success", "Listing Deleted!");
-  res.redirect("/listings");
-}));
+
 module.exports = router;
 

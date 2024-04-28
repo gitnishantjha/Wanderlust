@@ -1,3 +1,7 @@
+
+if(process.env.NODE_ENV!="production"){
+    require("dotenv").config();
+}
 const express=require('express');//connection of express
 const app=express();
 const mongoose=require('mongoose');//connection of mongoose
@@ -25,6 +29,7 @@ const path=require("path");
 const passport=require("passport");
 const LocalStrategy=require("passport-local");
 const User=require("./models/user.js");
+const { stdout } = require('process');
 //*make a "views" folder , in this folder we will make templates.
 //inside it we are making a new folder name Listing in which we will save all the listing related things
 //inside listing make index.ejs
@@ -59,9 +64,9 @@ const sessionOptions={
     },
 };
 
-app.get('/',(req,res)=>{ //making the api call for root server
-    res.send("Hi..root is working");
-});
+// app.get('/',(req,res)=>{ //making the api call for root server
+//     res.send("Hi..root is working");
+// });
 
 app.use(session(sessionOptions));
 app.use(flash());
@@ -96,11 +101,32 @@ app.use((req,res,next)=>{
 // let registeredUser=await User.register(fakeUser,"helloworld");
 // res.send(registeredUser);
 // });
+app.get("/listings/fsearc",async (req,res)=>{
+    console.log("hello");
+    const { location } = req.query;
+    console.log(location);
 
+    try {
+        // Retrieve the location value from the request query parameters
+        const { location } = req.query;
+
+        // Perform the Mongoose query to find listings based on the location
+        const searchResults = await Listing.find({ location: { $regex: location, $options: 'i' } });
+
+        // Render the search results page with the found listings
+        res.render('listings/search.ejs', { searchResults });
+    } catch (error) {
+        // Handle any errors
+        console.error('Error searching listings:', error);
+        res.status(500).send('Error searching listings');
+    }
+ });
 
 app.use("/listings",listingRouter);
 app.use("/listings/:id/reviews",reviewRouter);
 app.use("/",userRouter);
+
+
 
 
 
@@ -134,6 +160,17 @@ app.use((err,req,res,next)=>{
     res.status(status).render("error.ejs",{err});
 });
 
+
+
+
+
+//search
+
+
+
+
+// Route to handle the search request
+// Route handler for rendering search results
 
 
 app.listen(8080,()=>{ //the working port of localhost where our server is hosted
