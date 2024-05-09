@@ -20,6 +20,7 @@ const reviewRouter=require("./routes/review.js");
 const userRouter=require("./routes/user.js");
 
 const session=require("express-session");
+const MongoStore=require('connect-mongo');
 const flash=require("connect-flash");
 
 //To set up the ejs 
@@ -41,20 +42,39 @@ app.engine('ejs',ejsMate);//using ejsMate
 app.use(express.static(path.join(__dirname,"/public"))); // if we use public directory where we are making a styling folder i.e styles.css then we have to write this line
 
 
-let Mongo_url="mongodb://127.0.0.1:27017/Wanderlust";
+// let Mongo_url="mongodb://127.0.0.1:27017/Wanderlust";
+ const dbUrl=process.env.ATLASDB_URL;
+
 main().then(()=>{ //since main is the asyncronous we are using .then to execute the function but if sny error ocuured then the catch function will get ec=xecute
     console.log("connected to DB"); //connecting to database
 }).
 catch(err=>console.log(err)); 
 
 async function main(){ //await keyword is used in async function to wait till the connection happens but in case of mongoose the server will not stop the intialization of data,means the moment the database will get connected the data will be ready to get initialized into the data base
-await mongoose.connect(Mongo_url); //connecting the mongoose through the main()
+await mongoose.connect(dbUrl); //connecting the mongoose through the main()
 };
 
 
+
+
+
+const store=MongoStore.create({
+    mongoUrl:dbUrl,
+    crypto:{
+        secret:process.env.SECRET,
+    },
+    touchAfter:24*3600,
+});
+
+
+
+store.on("error",()=>{
+    console.log("Error in Mongo Session Store",err);
+});
 //using sessions
 const sessionOptions={
-    secret:"mysupersecretcode",
+    store,
+    secret:process.env.SECRET,
     resave:false,
     saveUninitialized:true,
     cookie:{
@@ -63,6 +83,7 @@ const sessionOptions={
         httpOnly:true,
     },
 };
+
 
 // app.get('/',(req,res)=>{ //making the api call for root server
 //     res.send("Hi..root is working");
