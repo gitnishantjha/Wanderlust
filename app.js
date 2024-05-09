@@ -18,7 +18,6 @@ const {listingSchema,reviewSchema}=require("./schema.js");//ye line grey out hui
 const listingRouter=require("./routes/listing.js");
 const reviewRouter=require("./routes/review.js");
 const userRouter=require("./routes/user.js");
-
 const session=require("express-session");
 const MongoStore=require('connect-mongo');
 const flash=require("connect-flash");
@@ -88,6 +87,9 @@ const sessionOptions={
 // app.get('/',(req,res)=>{ //making the api call for root server
 //     res.send("Hi..root is working");
 // });
+// app.get('/',(req,res)=>{
+//     res.render("/listings");
+// });
 
 app.use(session(sessionOptions));
 app.use(flash());
@@ -142,6 +144,7 @@ app.get("/listings/fsearc",async (req,res)=>{
         res.status(500).send('Error searching listings');
     }
  });
+
 
 app.use("/listings",listingRouter);
 app.use("/listings/:id/reviews",reviewRouter);
