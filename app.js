@@ -197,6 +197,7 @@ app.use((err,req,res,next)=>{
 // Route handler for rendering search results
 
 
-app.listen(8080,()=>{ //the working port of localhost where our server is hosted
-    console.log("server is listening to port");
+const port=process.env.PORT || 8080;
+app.listen(port,()=>{ //the working port of localhost where our server is hosted
+    console.log(`server is listening to port ${port}`);
 });
