@@ -44,10 +44,7 @@ app.use(express.static(path.join(__dirname,"/public"))); // if we use public dir
 // let Mongo_url="mongodb://127.0.0.1:27017/Wanderlust";
  const dbUrl=process.env.ATLASDB_URL;
 
-main().then(()=>{ //since main is the asyncronous we are using .then to execute the function but if sny error ocuured then the catch function will get ec=xecute
-    console.log("connected to DB"); //connecting to database
-}).
-catch(err=>console.log(err)); 
+const dbConnection = main(); //keep the connection promise so app.listen can wait for it below
 
 async function main(){ //await keyword is used in async function to wait till the connection happens but in case of mongoose the server will not stop the intialization of data,means the moment the database will get connected the data will be ready to get initialized into the data base
 await mongoose.connect(dbUrl); //connecting the mongoose through the main()
@@ -198,6 +195,12 @@ app.use((err,req,res,next)=>{
 
 
 const port=process.env.PORT || 8080;
-app.listen(port,()=>{ //the working port of localhost where our server is hosted
-    console.log(`server is listening to port ${port}`);
+dbConnection.then(()=>{
+    console.log("connected to DB");
+    app.listen(port,()=>{ //the working port of localhost where our server is hosted
+        console.log(`server is listening to port ${port}`);
+    });
+}).catch(err=>{
+    console.error("Failed to connect to DB", err);
+    process.exit(1);
 });
