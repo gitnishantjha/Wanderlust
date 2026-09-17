@@ -201,6 +201,7 @@ dbConnection.then(()=>{
         console.log(`server is listening to port ${port}`);
     });
 }).catch(err=>{
-    console.error("Failed to connect to DB", err);
+    console.error("Failed to connect to DB");
+    console.error(require("util").inspect(err, { depth: 10 }));
     process.exit(1);
 });
